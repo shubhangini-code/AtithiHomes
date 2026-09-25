@@ -1,0 +1,133 @@
+import slugify from "slugify";
+import mongoose from "mongoose";
+
+const propertySchema = new mongoose.Schema({
+  propertyName: {
+    type: String,
+    required: [true, "Please enter your property name"],
+  },
+  description: {
+    type: String,
+    required: [true, "Please add information about your property"],
+  },
+  extraInfo: {
+    type: String,
+    default: "checkin on time. good services.",
+  },
+  propertyType: {
+    type: String,
+    enum: ["House", "Flat", "Guest House", "Hotel"],
+    default: "House",
+  },
+  roomType: {
+    type: String,
+    enum: ["AnyType", "Room", "Entire Home", "Hotel"],
+    default: "AnyType",
+  },
+  maximumGuest: {
+    type: Number,
+    required: [true, "Please give the max no of Guest that can occupy"],
+  },
+  amenities: [
+    {
+      name: {
+        type: String,
+        required: true,
+        enum: [
+          "Wifi",
+          "Kitchen",
+          "Ac",
+          "Washing Machine",
+          "TV",
+          "Pool",
+          "Free Parking",
+        ],
+      },
+      icon: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  images: {
+    type: [
+      {
+        public_id: {
+          type: String,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    validate: {
+      validator: function (arr) {
+        return arr.length >= 6;
+      },
+      message: "The images must contain atkeast 6 images",
+    },
+  },
+  price: {
+    type: Number,
+    required: [true, "Please enter the price per night value"],
+    default: 500,
+  },
+  address: {
+    area: String,
+    city: String,
+    state: String,
+    pincode: Number,
+  },
+  //will add this soon
+  currentBookings: [
+    {
+      BookingId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Booking",
+      },
+      fromDate: {
+        type: Date,
+      },
+      toDate: {
+        type: Date,
+      },
+      user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+      },
+      numberOfnights: {
+        type: Number,
+      },
+    },
+  ],
+
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  slug: String,
+  checkInTime: {
+    type: String,
+    default: "11:00",
+  },
+  checkOutTime: {
+    type: String,
+    default: "13:00",
+  },
+});
+
+propertySchema.pre("save", function () {
+  this.slug = slugify(this.propertyName, { lower: true });
+});
+
+propertySchema.pre("save", function () {
+  this.address.city = this.address.city.toLowerCase().replaceAll("", "");
+});
+
+// const Property = mongoose.model("Property", propertySchema);
+
+const Property =
+  mongoose.models.Property || mongoose.model("Property", propertySchema);
+
+export { Property };
